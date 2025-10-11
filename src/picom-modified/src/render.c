@@ -1092,13 +1092,6 @@ void paint_all(session_t *ps, struct win *t) {
 	//
 	// Whether this is beneficial is to be determined XXX
 	for (auto w = t; w; w = w->prev_trans) {
-		// --- INÍCIO DA MODIFICAÇÃO POWER-DEV ---
-		// Se a janela for secreta e o modo de energia estiver ativado, pule a renderização.
-		if (ps->powerdev_mode_enabled && w->is_secret) {
-			log_info("Ocultando a janela secreta %#010x da renderização.", win_id(w));
-			continue;
-		}
-		// --- FIM DA MODIFICAÇÃO POWER-DEV ---
 		region_t bshape_no_corners =
 		    win_get_bounding_shape_global_without_corners_by_val(w);
 		region_t bshape_corners = win_get_bounding_shape_global_by_val(w);

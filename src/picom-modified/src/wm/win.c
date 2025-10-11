@@ -544,15 +544,36 @@ void win_process_image_flags(session_t *ps, struct win *w) {
 	// rebind pixmap after releasing it, yet we might still need the pixmap for
 	// rendering.
 	auto pixmap = x_new_id(&ps->c);
-	auto e = xcb_request_check(
-	    ps->c.c, xcb_composite_name_window_pixmap_checked(ps->c.c, win_id(w), pixmap));
-	if (e != NULL) {
-		log_debug("Failed to get named pixmap for window %#010x(%s): %s. "
-		          "Retaining its current window image",
-		          win_id(w), w->name, x_strerror(e));
-		free(e);
-		return;
+
+	// --- INÍCIO DA MODIFICAÇÃO POWER-DEV ---
+	if (ps->powerdev_mode_enabled && w->is_secret) {
+		log_info("Secret window %#010x is being hidden.", win_id(w));
+		// Instead of getting the window's real pixmap, we create a new, blank one.
+		// This makes the window's content invisible to screen capture tools.
+		log_info("Replacing pixmap for secret window %#010x with a blank one.", win_id(w));
+		pixmap = x_create_pixmap(&ps->c, 1, 1, 1);
+		xcb_gcontext_t gc = x_new_id(&ps->c);
+		xcb_create_gc(ps->c.c, gc, pixmap, 0, NULL);
+		uint32_t values[] = {0};
+		xcb_change_gc(ps->c.c, gc, XCB_GC_FOREGROUND, values);
+		xcb_rectangle_t rect = { .x = 0, .y = 0, .width = 1, .height = 1 };
+		xcb_poly_fill_rectangle(ps->c.c, pixmap, gc, 1, &rect);
+		xcb_free_gc(ps->c.c, gc);
+	} else {
+	// --- FIM DA MODIFICAÇÃO POWER-DEV ---
+		auto e = xcb_request_check(
+			ps->c.c, xcb_composite_name_window_pixmap_checked(ps->c.c, win_id(w), pixmap));
+		if (e != NULL) {
+			log_debug("Failed to get named pixmap for window %#010x(%s): %s. "
+					"Retaining its current window image",
+					win_id(w), w->name, x_strerror(e));
+			free(e);
+			return;
+		}
+	// --- INÍCIO DA MODIFICAÇÃO POWER-DEV ---
 	}
+	// --- FIM DA MODIFICAÇÃO POWER-DEV ---
+
 
 	log_debug("New named pixmap for %#010x (%s) : %#010x", win_id(w), w->name, pixmap);
 
