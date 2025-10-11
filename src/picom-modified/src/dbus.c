@@ -676,9 +676,11 @@ static DBusHandlerResult cdbus_process_repaint(session_t *ps, DBusMessage *msg a
 static DBusHandlerResult
 cdbus_process_toggle_power_mode(session_t *ps, DBusMessage *msg attr_unused,
                                              DBusMessage *reply, DBusError *e attr_unused) {
+	log_info("DBus: toggle_power_mode called. Current state: %d", ps->powerdev_mode_enabled);
 	ps->powerdev_mode_enabled = !ps->powerdev_mode_enabled;
-	log_info("Toggled Power-Dev mode: %s", ps->powerdev_mode_enabled ? "ON" : "OFF");
+	log_info("DBus: powerdev_mode_enabled is now: %d", ps->powerdev_mode_enabled);
 	force_repaint(ps);
+	log_info("DBus: Full screen damaged to trigger repaint.");
 	if (reply != NULL && !cdbus_append_boolean(reply, ps->powerdev_mode_enabled)) {
 		return DBUS_HANDLER_RESULT_NEED_MEMORY;
 	}

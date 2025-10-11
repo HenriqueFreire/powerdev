@@ -3,9 +3,6 @@ set -e
 exe=$(realpath $1)
 cd $(dirname $0)
 
-export XDG_RUNTIME_DIR=$(mktemp -d)
-trap 'rm -rf -- "$XDG_RUNTIME_DIR"' EXIT
-
 eval `dbus-launch --sh-syntax`
 
 ./run_one_test.sh $exe configs/empty.conf testcases/basic.py
